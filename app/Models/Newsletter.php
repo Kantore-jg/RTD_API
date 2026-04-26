@@ -6,28 +6,23 @@ use App\Traits\FormatsDatesSerialization;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ContactMessage extends Model
+class Newsletter extends Model
 {
     use HasFactory, FormatsDatesSerialization;
 
     protected $fillable = [
-        'first_name',
-        'last_name',
-        'email',
-        'phone',
-        'company',
         'subject',
-        'message',
-        'read',
-        'replied_at',
-        'reply_text',
+        'content',
+        'status',
+        'recipients_count',
+        'sent_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'read' => 'boolean',
-            'replied_at' => 'datetime',
+            'sent_at' => 'datetime',
+            'recipients_count' => 'integer',
         ];
     }
 }

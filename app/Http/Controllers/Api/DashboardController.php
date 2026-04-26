@@ -198,7 +198,7 @@ class DashboardController extends Controller
 
         return $activities
             ->sortByDesc('timestamp')
-            ->take(8)
+            ->take(5)
             ->map(fn ($a) => collect($a)->except('timestamp')->toArray())
             ->values()
             ->toArray();

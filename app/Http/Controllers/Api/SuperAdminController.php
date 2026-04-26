@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\OrganizationStatusChanged;
+use App\Mail\PaymentStatusChanged;
+use App\Mail\WelcomeOrganization;
 use App\Models\CompanyPayment;
 use App\Models\Organization;
 use App\Models\User;
@@ -10,6 +13,7 @@ use App\Traits\CachesQueries;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class SuperAdminController extends Controller
 {
@@ -71,14 +75,19 @@ class SuperAdminController extends Controller
             'nif', 'plan', 'monthly_fee', 'modules',
         ]));
 
+        $adminEmail = $request->admin_email;
+        $plainPassword = $request->admin_password ?? 'password';
+
         if ($request->filled('admin_email')) {
             User::create([
                 'name' => $request->admin_name ?? $request->name . ' Admin',
-                'email' => $request->admin_email,
-                'password' => Hash::make($request->admin_password ?? 'password'),
+                'email' => $adminEmail,
+                'password' => Hash::make($plainPassword),
                 'role' => 'ORG_ADMIN',
                 'organization_id' => $org->id,
             ]);
+
+            Mail::to($adminEmail)->send(new WelcomeOrganization($org, $adminEmail, $plainPassword));
         }
 
         return response()->json($org->loadCount('users'), 201);
@@ -113,9 +122,13 @@ class SuperAdminController extends Controller
     {
         abort_if(! $request->user()->isSuperAdmin(), 403);
 
-        $organization->update([
-            'status' => $organization->status === 'active' ? 'suspended' : 'active',
-        ]);
+        $newStatus = $organization->status === 'active' ? 'suspended' : 'active';
+        $organization->update(['status' => $newStatus]);
+
+        $notifyEmail = $organization->company_email ?? $organization->email;
+        if ($notifyEmail) {
+            Mail::to($notifyEmail)->send(new OrganizationStatusChanged($organization, $newStatus));
+        }
 
         return response()->json($organization);
     }
@@ -167,6 +180,7 @@ class SuperAdminController extends Controller
         abort_if(! $request->user()->isSuperAdmin(), 403);
 
         $payment->update(['statut' => 'Validé']);
+        $this->notifyPaymentStatus($payment, 'Validé');
 
         return response()->json($payment);
     }
@@ -176,7 +190,17 @@ class SuperAdminController extends Controller
         abort_if(! $request->user()->isSuperAdmin(), 403);
 
         $payment->update(['statut' => 'Rejeté']);
+        $this->notifyPaymentStatus($payment, 'Rejeté');
 
         return response()->json($payment);
+    }
+
+    private function notifyPaymentStatus(CompanyPayment $payment, string $status): void
+    {
+        $org = $payment->organization;
+        $notifyEmail = $org?->company_email ?? $org?->email;
+        if ($notifyEmail && $org) {
+            Mail::to($notifyEmail)->send(new PaymentStatusChanged($payment, $status, $org->name));
+        }
     }
 }

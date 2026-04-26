@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\WelcomeEmployee;
 use App\Models\Employee;
 use App\Models\User;
 use App\Traits\CachesQueries;
@@ -10,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EmployeeController extends Controller
@@ -86,6 +88,16 @@ class EmployeeController extends Controller
         });
 
         $this->clearOrgCache('employees', $orgId);
+
+        $orgName = $request->user()->organization->name ?? 'RDT';
+        if ($employee->email) {
+            Mail::to($employee->email)->send(new WelcomeEmployee(
+                $employee,
+                $orgName,
+                $request->boolean('create_account') ? $request->identifiant : null,
+                $request->boolean('create_account') ? $request->password : null,
+            ));
+        }
 
         return response()->json($employee, 201);
     }

@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\FolderController;
 use App\Http\Controllers\Api\MessageController;
+use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\PaymentMethodController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ProjectController;
@@ -118,6 +119,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin Messages (contact admin from within the app)
     Route::post('/admin-messages', [AdminMessageController::class, 'store']);
 
+    // Newsletters received by org
+    Route::get('/newsletters', [NewsletterController::class, 'received']);
+
     }); // end org.active middleware group
 
     /*
@@ -143,8 +147,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/contact-messages', [ContactMessageController::class, 'index']);
         Route::patch('/contact-messages/{message}/read', [ContactMessageController::class, 'markRead']);
+        Route::post('/contact-messages/{message}/reply', [ContactMessageController::class, 'reply']);
 
         Route::get('/admin-messages', [AdminMessageController::class, 'index']);
         Route::patch('/admin-messages/{message}/read', [AdminMessageController::class, 'markRead']);
+
+        Route::get('/newsletters', [NewsletterController::class, 'index']);
+        Route::post('/newsletters', [NewsletterController::class, 'store']);
+        Route::post('/newsletters/{newsletter}/send', [NewsletterController::class, 'send']);
+        Route::delete('/newsletters/{newsletter}', [NewsletterController::class, 'destroy']);
     });
 });
