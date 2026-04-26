@@ -32,11 +32,12 @@ class SettingsController extends Controller
             'email' => ['nullable', 'email', 'max:255'],
             'company_email' => ['nullable', 'email', 'max:255'],
             'nif' => ['nullable', 'string', 'max:100'],
+            'accent_color' => ['nullable', 'string', 'in:blue,violet,emerald,rose,orange,slate'],
         ]);
 
         $org = $request->user()->organization;
         $org->update($request->only([
-            'name', 'domain', 'address', 'phone', 'email', 'company_email', 'nif',
+            'name', 'domain', 'address', 'phone', 'email', 'company_email', 'nif', 'accent_color',
         ]));
 
         return response()->json($org);

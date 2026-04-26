@@ -19,6 +19,7 @@ class Organization extends Model
         'email',
         'company_email',
         'logo',
+        'accent_color',
         'nif',
         'plan',
         'monthly_fee',
