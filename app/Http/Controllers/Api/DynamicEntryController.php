@@ -11,11 +11,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DynamicEntryController extends Controller
 {
-    public function index(Request $request, DynamicModule $dynamicModule): JsonResponse
+    public function index(Request $request, DynamicModule $module): JsonResponse
     {
-        abort_if($dynamicModule->organization_id !== $request->user()->organization_id, 403);
+        abort_if($module->organization_id !== $request->user()->organization_id, 403);
 
-        $query = $dynamicModule->entries();
+        $query = $module->entries()->with('submitter:id,name');
 
         if ($search = $request->get('search')) {
             $query->where('data', 'like', "%{$search}%");
@@ -26,16 +26,16 @@ class DynamicEntryController extends Controller
         return response()->json($entries);
     }
 
-    public function store(Request $request, DynamicModule $dynamicModule): JsonResponse
+    public function store(Request $request, DynamicModule $module): JsonResponse
     {
-        abort_if($dynamicModule->organization_id !== $request->user()->organization_id, 403);
+        abort_if($module->organization_id !== $request->user()->organization_id, 403);
 
         $request->validate([
             'data' => ['required', 'array'],
         ]);
 
         $entry = DynamicEntry::create([
-            'dynamic_module_id' => $dynamicModule->id,
+            'dynamic_module_id' => $module->id,
             'data' => $request->data,
             'submitted_by' => $request->user()->id,
         ]);
@@ -43,37 +43,37 @@ class DynamicEntryController extends Controller
         return response()->json($entry, 201);
     }
 
-    public function destroy(Request $request, DynamicModule $dynamicModule, DynamicEntry $dynamicEntry): JsonResponse
+    public function destroy(Request $request, DynamicEntry $entry): JsonResponse
     {
-        abort_if($dynamicModule->organization_id !== $request->user()->organization_id, 403);
-        abort_if($dynamicEntry->dynamic_module_id !== $dynamicModule->id, 404);
+        $module = $entry->module;
+        abort_if($module->organization_id !== $request->user()->organization_id, 403);
 
-        $dynamicEntry->delete();
+        $entry->delete();
 
         return response()->json(['message' => 'Entrée supprimée.']);
     }
 
-    public function exportCsv(Request $request, DynamicModule $dynamicModule): StreamedResponse
+    public function exportCsv(Request $request, DynamicModule $module): StreamedResponse
     {
-        abort_if($dynamicModule->organization_id !== $request->user()->organization_id, 403);
+        abort_if($module->organization_id !== $request->user()->organization_id, 403);
 
-        $entries = $dynamicModule->entries()->get();
-        $fields = collect($dynamicModule->fields ?? []);
-        $headers = $fields->pluck('label', 'name')->toArray();
+        $entries = $module->entries()->get();
+        $fields = collect($module->fields ?? []);
 
-        return response()->streamDownload(function () use ($entries, $headers) {
+        return response()->streamDownload(function () use ($entries, $fields) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, array_values($headers) ?: ['Données']);
+            $labels = $fields->pluck('label')->toArray();
+            fputcsv($handle, $labels ?: ['Données']);
 
             foreach ($entries as $entry) {
                 $row = [];
-                foreach (array_keys($headers) as $fieldName) {
-                    $row[] = $entry->data[$fieldName] ?? '';
+                foreach ($fields as $field) {
+                    $row[] = $entry->data[$field['label']] ?? $entry->data[$field['name'] ?? ''] ?? '';
                 }
                 fputcsv($handle, $row ?: [json_encode($entry->data)]);
             }
 
             fclose($handle);
-        }, 'export_' . str_replace(' ', '_', $dynamicModule->name) . '.csv', ['Content-Type' => 'text/csv']);
+        }, 'export_' . str_replace(' ', '_', $module->name) . '.csv', ['Content-Type' => 'text/csv']);
     }
 }

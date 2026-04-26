@@ -27,7 +27,7 @@ class DynamicModuleController extends Controller
             'description' => ['nullable', 'string'],
             'icon' => ['nullable', 'string', 'max:50'],
             'show_in_sidebar' => ['nullable', 'boolean'],
-            'fields' => ['required', 'array'],
+            'fields' => ['nullable', 'array'],
         ]);
 
         $module = DynamicModule::create([
@@ -38,16 +38,16 @@ class DynamicModuleController extends Controller
         return response()->json($module, 201);
     }
 
-    public function show(Request $request, DynamicModule $dynamicModule): JsonResponse
+    public function show(Request $request, DynamicModule $module): JsonResponse
     {
-        abort_if($dynamicModule->organization_id !== $request->user()->organization_id, 403);
+        abort_if($module->organization_id !== $request->user()->organization_id, 403);
 
-        return response()->json($dynamicModule->loadCount('entries'));
+        return response()->json($module->loadCount('entries'));
     }
 
-    public function update(Request $request, DynamicModule $dynamicModule): JsonResponse
+    public function update(Request $request, DynamicModule $module): JsonResponse
     {
-        abort_if($dynamicModule->organization_id !== $request->user()->organization_id, 403);
+        abort_if($module->organization_id !== $request->user()->organization_id, 403);
 
         $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
@@ -57,19 +57,19 @@ class DynamicModuleController extends Controller
             'fields' => ['nullable', 'array'],
         ]);
 
-        $dynamicModule->update($request->only([
+        $module->update($request->only([
             'name', 'description', 'icon', 'show_in_sidebar', 'fields',
         ]));
 
-        return response()->json($dynamicModule);
+        return response()->json($module);
     }
 
-    public function destroy(Request $request, DynamicModule $dynamicModule): JsonResponse
+    public function destroy(Request $request, DynamicModule $module): JsonResponse
     {
-        abort_if($dynamicModule->organization_id !== $request->user()->organization_id, 403);
+        abort_if($module->organization_id !== $request->user()->organization_id, 403);
 
-        $dynamicModule->entries()->delete();
-        $dynamicModule->delete();
+        $module->entries()->delete();
+        $module->delete();
 
         return response()->json(['message' => 'Module supprimé.']);
     }

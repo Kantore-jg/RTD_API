@@ -38,12 +38,12 @@ class AdminMessageController extends Controller
         return response()->json($messages);
     }
 
-    public function markRead(Request $request, AdminMessage $adminMessage): JsonResponse
+    public function markRead(Request $request, AdminMessage $message): JsonResponse
     {
         abort_if(! $request->user()->isSuperAdmin(), 403);
 
-        $adminMessage->update(['read' => true]);
+        $message->update(['read' => true]);
 
-        return response()->json($adminMessage);
+        return response()->json($message);
     }
 }

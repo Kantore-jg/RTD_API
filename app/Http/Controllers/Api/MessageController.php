@@ -16,8 +16,8 @@ class MessageController extends Controller
 
         $messages = $channel->messages()
             ->with('user:id,name,avatar')
-            ->latest()
-            ->paginate($request->get('per_page', 30));
+            ->oldest()
+            ->paginate($request->get('per_page', 50));
 
         return response()->json($messages);
     }

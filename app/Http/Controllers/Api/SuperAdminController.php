@@ -114,7 +114,7 @@ class SuperAdminController extends Controller
         abort_if(! $request->user()->isSuperAdmin(), 403);
 
         $organization->update([
-            'status' => $organization->status === 'active' ? 'inactive' : 'active',
+            'status' => $organization->status === 'active' ? 'suspended' : 'active',
         ]);
 
         return response()->json($organization);
@@ -155,28 +155,28 @@ class SuperAdminController extends Controller
     {
         abort_if(! $request->user()->isSuperAdmin(), 403);
 
-        $payments = CompanyPayment::with('organization:id,name')
+        $payments = CompanyPayment::with(['organization:id,name', 'paymentMethod:id,bank_name,account_number,type'])
             ->latest('date')
             ->paginate($request->get('per_page', 15));
 
         return response()->json($payments);
     }
 
-    public function validatePayment(Request $request, CompanyPayment $companyPayment): JsonResponse
+    public function validatePayment(Request $request, CompanyPayment $payment): JsonResponse
     {
         abort_if(! $request->user()->isSuperAdmin(), 403);
 
-        $companyPayment->update(['statut' => 'Validé']);
+        $payment->update(['statut' => 'Validé']);
 
-        return response()->json($companyPayment);
+        return response()->json($payment);
     }
 
-    public function rejectPayment(Request $request, CompanyPayment $companyPayment): JsonResponse
+    public function rejectPayment(Request $request, CompanyPayment $payment): JsonResponse
     {
         abort_if(! $request->user()->isSuperAdmin(), 403);
 
-        $companyPayment->update(['statut' => 'Rejeté']);
+        $payment->update(['statut' => 'Rejeté']);
 
-        return response()->json($companyPayment);
+        return response()->json($payment);
     }
 }

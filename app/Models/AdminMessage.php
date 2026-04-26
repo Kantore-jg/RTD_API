@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\FormatsDatesSerialization;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AdminMessage extends Model
 {
-    use HasFactory;
+    use HasFactory, FormatsDatesSerialization;
 
     protected $fillable = [
         'organization_id',

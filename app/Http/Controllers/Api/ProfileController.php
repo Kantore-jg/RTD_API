@@ -24,16 +24,28 @@ class ProfileController extends Controller
             'name' => ['sometimes', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:500'],
+            'department' => ['nullable', 'string', 'max:255'],
+            'position' => ['nullable', 'string', 'max:255'],
+            'bio' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $user = $request->user();
-        $user->update($request->only(['name']));
 
-        if ($user->employee && $request->hasAny(['phone', 'address'])) {
-            $user->employee->update($request->only(['phone']));
+        if ($request->has('name')) {
+            $user->update(['name' => $request->name]);
         }
 
-        return response()->json(['user' => $user->load('employee')]);
+        if ($user->employee) {
+            $employeeData = array_filter($request->only(['phone', 'address', 'department']), fn ($v) => $v !== null);
+            if ($request->has('position')) {
+                $employeeData['role'] = $request->position;
+            }
+            if (! empty($employeeData)) {
+                $user->employee->update($employeeData);
+            }
+        }
+
+        return response()->json(['user' => $user->fresh()->load('employee')]);
     }
 
     public function updateAvatar(Request $request): JsonResponse
@@ -51,7 +63,10 @@ class ProfileController extends Controller
         $path = $request->file('avatar')->store('avatars', 'public');
         $user->update(['avatar' => $path]);
 
-        return response()->json(['user' => $user]);
+        return response()->json([
+            'user' => $user,
+            'avatar' => Storage::disk('public')->url($path),
+        ]);
     }
 
     public function removeAvatar(Request $request): JsonResponse

@@ -15,10 +15,12 @@ class ProjectController extends Controller
     public function index(Request $request): JsonResponse
     {
         $orgId = $request->user()->organization_id;
-        $cacheKey = $this->orgCacheKey('projects', $orgId) . ':' . md5($request->getQueryString() ?? '');
+        $cacheKey = $this->versionedOrgCacheKey('projects', $orgId, md5($request->getQueryString() ?? ''));
 
         $data = $this->cached($cacheKey, 60, function () use ($request, $orgId) {
-            $query = Project::where('organization_id', $orgId)->withCount('tasks');
+            $query = Project::where('organization_id', $orgId)
+                ->with('members:id,name')
+                ->withCount('tasks');
 
             if ($search = $request->get('search')) {
                 $query->where('name', 'like', "%{$search}%");
@@ -44,10 +46,12 @@ class ProjectController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'category' => ['nullable', 'string', 'max:100'],
-            'status' => ['nullable', 'string'],
+            'status' => ['nullable', 'in:En cours,Planifié,Urgent,Terminé'],
             'budget' => ['nullable', 'numeric'],
             'deadline' => ['nullable', 'date'],
             'team' => ['nullable', 'array'],
+            'members' => ['nullable', 'array'],
+            'members.*' => ['exists:employees,id'],
         ]);
 
         $orgId = $request->user()->organization_id;
@@ -58,16 +62,20 @@ class ProjectController extends Controller
             'progress' => 0,
         ]);
 
+        if ($request->has('members')) {
+            $project->members()->sync($request->members);
+        }
+
         $this->clearOrgCache('projects', $orgId);
 
-        return response()->json($project, 201);
+        return response()->json($project->load('members:id,name'), 201);
     }
 
     public function show(Request $request, Project $project): JsonResponse
     {
         abort_if($project->organization_id !== $request->user()->organization_id, 403);
 
-        return response()->json($project->loadCount('tasks'));
+        return response()->json($project->load('members:id,name')->loadCount('tasks'));
     }
 
     public function update(Request $request, Project $project): JsonResponse
@@ -78,19 +86,25 @@ class ProjectController extends Controller
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'category' => ['nullable', 'string', 'max:100'],
-            'status' => ['nullable', 'string'],
+            'status' => ['nullable', 'in:En cours,Planifié,Urgent,Terminé'],
             'budget' => ['nullable', 'numeric'],
             'deadline' => ['nullable', 'date'],
             'team' => ['nullable', 'array'],
+            'members' => ['nullable', 'array'],
+            'members.*' => ['exists:employees,id'],
         ]);
 
         $project->update($request->only([
             'name', 'description', 'category', 'status', 'budget', 'deadline', 'team',
         ]));
 
+        if ($request->has('members')) {
+            $project->members()->sync($request->members);
+        }
+
         $this->clearOrgCache('projects', $request->user()->organization_id);
 
-        return response()->json($project);
+        return response()->json($project->load('members:id,name'));
     }
 
     public function updateProgress(Request $request, Project $project): JsonResponse

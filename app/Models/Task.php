@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\FormatsDatesSerialization;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Task extends Model
 {
-    use HasFactory;
+    use HasFactory, FormatsDatesSerialization;
 
     protected $fillable = [
         'organization_id',
@@ -25,7 +26,7 @@ class Task extends Model
     protected function casts(): array
     {
         return [
-            'due_date' => 'date',
+            'due_date' => 'date:Y-m-d',
         ];
     }
 

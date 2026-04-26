@@ -14,6 +14,7 @@ class CompanyPaymentController extends Controller
         $orgId = $request->user()->organization_id;
 
         $payments = CompanyPayment::where('organization_id', $orgId)
+            ->with('paymentMethod:id,bank_name,account_number,type')
             ->latest('date')
             ->paginate($request->get('per_page', 15));
 
@@ -24,17 +25,18 @@ class CompanyPaymentController extends Controller
     {
         $request->validate([
             'date' => ['required', 'date'],
-            'description' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:255'],
             'montant' => ['required', 'numeric', 'min:0'],
-            'receipt' => ['nullable', 'file', 'max:5120'],
+            'receipt' => ['nullable', 'image', 'max:5120'],
             'account' => ['nullable', 'string', 'max:255'],
+            'payment_method_id' => ['nullable', 'exists:payment_methods,id'],
             'statut' => ['nullable', 'string'],
         ]);
 
         $orgId = $request->user()->organization_id;
         $data = [
             'organization_id' => $orgId,
-            ...$request->only(['date', 'description', 'montant', 'account', 'statut']),
+            ...$request->only(['date', 'description', 'montant', 'account', 'payment_method_id', 'statut']),
         ];
 
         if ($request->hasFile('receipt')) {
@@ -43,7 +45,7 @@ class CompanyPaymentController extends Controller
 
         $payment = CompanyPayment::create($data);
 
-        return response()->json($payment, 201);
+        return response()->json($payment->load('paymentMethod:id,bank_name,account_number,type'), 201);
     }
 
     public function destroy(Request $request, CompanyPayment $companyPayment): JsonResponse

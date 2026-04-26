@@ -59,7 +59,10 @@ class SettingsController extends Controller
         $path = $request->file('logo')->store('logos', 'public');
         $org->update(['logo' => $path]);
 
-        return response()->json($org);
+        return response()->json([
+            'data' => $org,
+            'logo' => Storage::disk('public')->url($path),
+        ]);
     }
 
     public function removeLogo(Request $request): JsonResponse

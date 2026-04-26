@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('role')->default('Employé');
             $table->string('department')->nullable();
+            $table->string('address')->nullable();
             $table->enum('status', ['Active', 'Inactive', 'On Leave'])->default('Active');
             $table->date('joined_at')->nullable();
             $table->timestamps();

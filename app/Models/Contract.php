@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\FormatsDatesSerialization;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Contract extends Model
 {
-    use HasFactory;
+    use HasFactory, FormatsDatesSerialization;
 
     protected $fillable = [
         'organization_id',
@@ -21,8 +22,8 @@ class Contract extends Model
     protected function casts(): array
     {
         return [
-            'start_date' => 'date',
-            'end_date' => 'date',
+            'start_date' => 'date:Y-m-d',
+            'end_date' => 'date:Y-m-d',
             'monthly_fee' => 'decimal:2',
         ];
     }

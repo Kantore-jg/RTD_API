@@ -40,9 +40,12 @@ Route::post('/contact', [ContactMessageController::class, 'store']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Auth
+    // Auth (always accessible even if org suspended — needed for logout & status check)
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+
+    // All org-bound routes require active organization
+    Route::middleware('org.active')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index']);
@@ -66,6 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Company Payments
     Route::apiResource('company-payments', CompanyPaymentController::class)->only(['index', 'store', 'destroy']);
+    Route::get('/payment-methods', [PaymentMethodController::class, 'listAll']);
 
     // Attendance
     Route::get('/attendance/stats', [AttendanceController::class, 'stats']);
@@ -114,9 +118,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin Messages (contact admin from within the app)
     Route::post('/admin-messages', [AdminMessageController::class, 'store']);
 
+    }); // end org.active middleware group
+
     /*
     |--------------------------------------------------------------------------
-    | Super Admin Routes
+    | Super Admin Routes (no org.active check — super admin has no org)
     |--------------------------------------------------------------------------
     */
 

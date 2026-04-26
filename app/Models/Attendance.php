@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\FormatsDatesSerialization;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Attendance extends Model
 {
-    use HasFactory;
+    use HasFactory, FormatsDatesSerialization;
 
     protected $fillable = [
         'organization_id',
@@ -23,7 +24,7 @@ class Attendance extends Model
     protected function casts(): array
     {
         return [
-            'date' => 'date',
+            'date' => 'date:Y-m-d',
         ];
     }
 

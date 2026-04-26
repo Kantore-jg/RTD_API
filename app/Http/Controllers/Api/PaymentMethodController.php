@@ -16,6 +16,11 @@ class PaymentMethodController extends Controller
         return response()->json(PaymentMethod::all());
     }
 
+    public function listAll(): JsonResponse
+    {
+        return response()->json(PaymentMethod::all());
+    }
+
     public function store(Request $request): JsonResponse
     {
         abort_if(! $request->user()->isSuperAdmin(), 403);

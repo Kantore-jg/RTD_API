@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\FormatsDatesSerialization;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +14,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, FormatsDatesSerialization;
 
     protected $fillable = [
         'name',
@@ -23,6 +24,11 @@ class User extends Authenticatable
         'role',
         'organization_id',
     ];
+
+    public function setEmailAttribute(string $value): void
+    {
+        $this->attributes['email'] = strtolower(trim($value));
+    }
 
     protected $hidden = [
         'password',

@@ -41,12 +41,12 @@ class ContactMessageController extends Controller
         return response()->json($messages);
     }
 
-    public function markRead(Request $request, ContactMessage $contactMessage): JsonResponse
+    public function markRead(Request $request, ContactMessage $message): JsonResponse
     {
         abort_if(! $request->user()->isSuperAdmin(), 403);
 
-        $contactMessage->update(['read' => true]);
+        $message->update(['read' => true]);
 
-        return response()->json($contactMessage);
+        return response()->json($message);
     }
 }

@@ -26,13 +26,13 @@ class ChannelController extends Controller
 
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'type' => ['nullable', 'string', 'max:50'],
+            'type' => ['nullable', 'in:PUBLIC,ANNOUNCEMENT,PRIVATE'],
         ]);
 
         $channel = Channel::create([
             'organization_id' => $request->user()->organization_id,
             'name' => $request->name,
-            'type' => $request->get('type', 'general'),
+            'type' => $request->get('type', 'PUBLIC'),
         ]);
 
         return response()->json($channel, 201);

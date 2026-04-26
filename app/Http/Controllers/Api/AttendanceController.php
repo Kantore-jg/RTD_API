@@ -16,7 +16,7 @@ class AttendanceController extends Controller
     public function index(Request $request): JsonResponse
     {
         $orgId = $request->user()->organization_id;
-        $cacheKey = $this->orgCacheKey('attendances', $orgId) . ':' . md5($request->getQueryString() ?? '');
+        $cacheKey = $this->versionedOrgCacheKey('attendances', $orgId, md5($request->getQueryString() ?? ''));
 
         $data = $this->cached($cacheKey, 30, function () use ($request, $orgId) {
             $query = Attendance::where('organization_id', $orgId)->with('employee');

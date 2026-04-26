@@ -15,7 +15,7 @@ class FinanceController extends Controller
     public function index(Request $request): JsonResponse
     {
         $orgId = $request->user()->organization_id;
-        $cacheKey = $this->orgCacheKey('finances', $orgId) . ':' . md5($request->getQueryString() ?? '');
+        $cacheKey = $this->versionedOrgCacheKey('finances', $orgId, md5($request->getQueryString() ?? ''));
 
         $data = $this->cached($cacheKey, 60, function () use ($request, $orgId) {
             $query = FinanceRecord::where('organization_id', $orgId);
@@ -35,9 +35,9 @@ class FinanceController extends Controller
         $request->validate([
             'date' => ['required', 'date'],
             'description' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'string'],
+            'type' => ['required', 'in:Revenu,Dépense'],
             'montant' => ['required', 'numeric', 'min:0'],
-            'statut' => ['nullable', 'string'],
+            'statut' => ['nullable', 'in:Validé,Encaissé,En attente'],
         ]);
 
         $orgId = $request->user()->organization_id;
@@ -48,16 +48,18 @@ class FinanceController extends Controller
         ]);
 
         $this->clearOrgCache('finances', $orgId);
+        $this->clearOrgCache('finance_summary', $orgId);
 
         return response()->json($record, 201);
     }
 
-    public function destroy(Request $request, FinanceRecord $financeRecord): JsonResponse
+    public function destroy(Request $request, FinanceRecord $finance): JsonResponse
     {
-        abort_if($financeRecord->organization_id !== $request->user()->organization_id, 403);
+        abort_if($finance->organization_id !== $request->user()->organization_id, 403);
 
-        $financeRecord->delete();
+        $finance->delete();
         $this->clearOrgCache('finances', $request->user()->organization_id);
+        $this->clearOrgCache('finance_summary', $request->user()->organization_id);
 
         return response()->json(['message' => 'Enregistrement supprimé.']);
     }

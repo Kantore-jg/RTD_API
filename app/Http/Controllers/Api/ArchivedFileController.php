@@ -65,32 +65,32 @@ class ArchivedFileController extends Controller
         return response()->json($file, 201);
     }
 
-    public function show(Request $request, ArchivedFile $archivedFile): JsonResponse
+    public function show(Request $request, ArchivedFile $file): JsonResponse
     {
-        abort_if($archivedFile->organization_id !== $request->user()->organization_id, 403);
+        abort_if($file->organization_id !== $request->user()->organization_id, 403);
 
-        return response()->json($archivedFile->load('accessLogs.user', 'folder'));
+        return response()->json($file->load('accessLogs.user', 'folder'));
     }
 
-    public function download(Request $request, ArchivedFile $archivedFile): StreamedResponse
+    public function download(Request $request, ArchivedFile $file): StreamedResponse
     {
-        abort_if($archivedFile->organization_id !== $request->user()->organization_id, 403);
+        abort_if($file->organization_id !== $request->user()->organization_id, 403);
 
         FileAccessLog::create([
-            'archived_file_id' => $archivedFile->id,
+            'archived_file_id' => $file->id,
             'user_id' => $request->user()->id,
             'action' => 'download',
         ]);
 
-        return Storage::disk('public')->download($archivedFile->path, $archivedFile->original_name);
+        return Storage::disk('public')->download($file->path, $file->original_name);
     }
 
-    public function destroy(Request $request, ArchivedFile $archivedFile): JsonResponse
+    public function destroy(Request $request, ArchivedFile $file): JsonResponse
     {
-        abort_if($archivedFile->organization_id !== $request->user()->organization_id, 403);
+        abort_if($file->organization_id !== $request->user()->organization_id, 403);
 
-        Storage::disk('public')->delete($archivedFile->path);
-        $archivedFile->delete();
+        Storage::disk('public')->delete($file->path);
+        $file->delete();
 
         return response()->json(['message' => 'Fichier supprimé.']);
     }

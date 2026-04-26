@@ -27,6 +27,12 @@ class AuthController extends Controller
             ]);
         }
 
+        if ($user->organization && $user->organization->status === 'suspended') {
+            throw ValidationException::withMessages([
+                'email' => ['Votre organisation a été suspendue. Veuillez contacter l\'administration.'],
+            ]);
+        }
+
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([

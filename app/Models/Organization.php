@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\FormatsDatesSerialization;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Organization extends Model
 {
-    use HasFactory;
+    use HasFactory, FormatsDatesSerialization;
 
     protected $fillable = [
         'name',
@@ -24,6 +25,16 @@ class Organization extends Model
         'modules',
         'status',
     ];
+
+    public function setEmailAttribute(?string $value): void
+    {
+        $this->attributes['email'] = $value ? strtolower(trim($value)) : $value;
+    }
+
+    public function setCompanyEmailAttribute(?string $value): void
+    {
+        $this->attributes['company_email'] = $value ? strtolower(trim($value)) : $value;
+    }
 
     protected function casts(): array
     {

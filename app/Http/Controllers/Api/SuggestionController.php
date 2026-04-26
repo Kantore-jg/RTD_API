@@ -36,7 +36,7 @@ class SuggestionController extends Controller
             'user_id' => $request->user()->id,
             'text' => $request->text,
             'votes' => 0,
-            'status' => 'En attente',
+            'status' => 'open',
         ]);
 
         return response()->json($suggestion, 201);
@@ -57,7 +57,7 @@ class SuggestionController extends Controller
         abort_if(! $request->user()->isAdmin() && ! $request->user()->isSuperAdmin(), 403);
 
         $request->validate([
-            'status' => ['required', 'string'],
+            'status' => ['required', 'in:open,implemented,rejected'],
         ]);
 
         $suggestion->update(['status' => $request->status]);

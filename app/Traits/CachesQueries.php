@@ -28,6 +28,18 @@ trait CachesQueries
 
     protected function clearOrgCache(string $resource, int $orgId): void
     {
-        Cache::forget($this->orgCacheKey($resource, $orgId));
+        $versionKey = "org:{$orgId}:{$resource}:version";
+        $current = (int) Cache::get($versionKey, 0);
+        Cache::put($versionKey, $current + 1, 86400);
+        Cache::forget("org:{$orgId}:{$resource}");
+    }
+
+    protected function versionedOrgCacheKey(string $resource, int $orgId, string $suffix = ''): string
+    {
+        $versionKey = "org:{$orgId}:{$resource}:version";
+        $version = (int) Cache::get($versionKey, 0);
+        $base = "org:{$orgId}:{$resource}:v{$version}";
+
+        return $suffix ? "{$base}:{$suffix}" : $base;
     }
 }

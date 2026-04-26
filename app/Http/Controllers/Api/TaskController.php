@@ -16,7 +16,7 @@ class TaskController extends Controller
     {
         $user = $request->user();
         $orgId = $user->organization_id;
-        $cacheKey = $this->orgCacheKey('tasks', $orgId) . ':' . $user->id . ':' . md5($request->getQueryString() ?? '');
+        $cacheKey = $this->versionedOrgCacheKey('tasks', $orgId, $user->id . ':' . md5($request->getQueryString() ?? ''));
 
         $data = $this->cached($cacheKey, 30, function () use ($request, $user, $orgId) {
             $query = Task::where('organization_id', $orgId)->with('assignees', 'project');
@@ -47,11 +47,11 @@ class TaskController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->validate([
-            'project_id' => ['required', 'exists:projects,id'],
+            'project_id' => ['nullable', 'exists:projects,id'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'status' => ['nullable', 'string'],
-            'priority' => ['nullable', 'string'],
+            'status' => ['nullable', 'in:PENDING,IN_PROGRESS,COMPLETED,CANCELLED'],
+            'priority' => ['nullable', 'in:CRITICAL,HIGH,MEDIUM,LOW'],
             'progress' => ['nullable', 'integer', 'min:0', 'max:100'],
             'due_date' => ['nullable', 'date'],
             'assignees' => ['nullable', 'array'],
@@ -88,8 +88,8 @@ class TaskController extends Controller
         $request->validate([
             'title' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'status' => ['nullable', 'string'],
-            'priority' => ['nullable', 'string'],
+            'status' => ['nullable', 'in:PENDING,IN_PROGRESS,COMPLETED,CANCELLED'],
+            'priority' => ['nullable', 'in:CRITICAL,HIGH,MEDIUM,LOW'],
             'progress' => ['nullable', 'integer', 'min:0', 'max:100'],
             'due_date' => ['nullable', 'date'],
             'assignees' => ['nullable', 'array'],
@@ -114,7 +114,7 @@ class TaskController extends Controller
         abort_if($task->organization_id !== $request->user()->organization_id, 403);
 
         $request->validate([
-            'status' => ['required', 'string'],
+            'status' => ['required', 'in:PENDING,IN_PROGRESS,COMPLETED,CANCELLED'],
         ]);
 
         $task->update(['status' => $request->status]);

@@ -19,7 +19,7 @@ class EmployeeController extends Controller
     public function index(Request $request): JsonResponse
     {
         $orgId = $request->user()->organization_id;
-        $cacheKey = $this->orgCacheKey('employees', $orgId) . ':' . md5($request->getQueryString() ?? '');
+        $cacheKey = $this->versionedOrgCacheKey('employees', $orgId, md5($request->getQueryString() ?? ''));
 
         $data = $this->cached($cacheKey, 60, function () use ($request, $orgId) {
             $query = Employee::where('organization_id', $orgId);
@@ -49,7 +49,7 @@ class EmployeeController extends Controller
             'phone' => ['nullable', 'string', 'max:50'],
             'role' => ['nullable', 'string', 'max:100'],
             'department' => ['nullable', 'string', 'max:100'],
-            'status' => ['nullable', 'string'],
+            'status' => ['nullable', 'in:Active,Inactive,On Leave'],
             'joined_at' => ['nullable', 'date'],
             'create_account' => ['nullable', 'boolean'],
             'identifiant' => ['nullable', 'email', 'unique:users,email'],
@@ -80,7 +80,7 @@ class EmployeeController extends Controller
                 'phone' => $request->phone,
                 'role' => $request->role,
                 'department' => $request->department,
-                'status' => $request->get('status', 'Actif'),
+                'status' => $request->get('status', 'Active'),
                 'joined_at' => $request->joined_at,
             ]);
         });
@@ -107,7 +107,7 @@ class EmployeeController extends Controller
             'phone' => ['nullable', 'string', 'max:50'],
             'role' => ['nullable', 'string', 'max:100'],
             'department' => ['nullable', 'string', 'max:100'],
-            'status' => ['nullable', 'string'],
+            'status' => ['nullable', 'in:Active,Inactive,On Leave'],
             'joined_at' => ['nullable', 'date'],
         ]);
 
@@ -124,7 +124,13 @@ class EmployeeController extends Controller
     {
         $this->authorizeOrg($request, $employee);
 
-        $employee->delete();
+        DB::transaction(function () use ($employee) {
+            if ($employee->user_id) {
+                User::destroy($employee->user_id);
+            }
+            $employee->delete();
+        });
+
         $this->clearOrgCache('employees', $request->user()->organization_id);
 
         return response()->json(['message' => 'Employé supprimé.']);
@@ -135,7 +141,7 @@ class EmployeeController extends Controller
         $this->authorizeOrg($request, $employee);
 
         $employee->update([
-            'status' => $employee->status === 'Actif' ? 'Inactif' : 'Actif',
+            'status' => $employee->status === 'Active' ? 'Inactive' : 'Active',
         ]);
 
         $this->clearOrgCache('employees', $request->user()->organization_id);
