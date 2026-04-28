@@ -25,7 +25,7 @@ class ArchivedFileController extends Controller
     {
         $orgId = $request->user()->organization_id;
 
-        $query = ArchivedFile::where('organization_id', $orgId)->with('folder', 'uploader');
+        $query = ArchivedFile::where('organization_id', $orgId)->with(['folder', 'uploader', 'accessLogs.user']);
 
         if ($folderId = $request->get('folder_id')) {
             $query->where('folder_id', $folderId);
