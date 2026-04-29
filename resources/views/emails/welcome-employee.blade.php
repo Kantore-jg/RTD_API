@@ -20,7 +20,7 @@
 
     @if($loginEmail)
     <p style="color: #ef4444; font-size: 13px; font-weight: 600;">⚠ Veuillez changer votre mot de passe dès votre première connexion.</p>
-    <a href="{{ config('app.frontend_url', 'http://localhost:5173') }}/login" class="btn">Se connecter</a>
+    <a href="{{ config('app.frontend_url', 'http://34.59.117.62:84') }}/login" class="btn">Se connecter</a>
     @else
     <p>Votre administrateur vous communiquera vos accès de connexion si nécessaire.</p>
     @endif

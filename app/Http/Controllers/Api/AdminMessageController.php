@@ -46,4 +46,21 @@ class AdminMessageController extends Controller
 
         return response()->json($message);
     }
+
+    public function reply(Request $request, AdminMessage $message): JsonResponse
+    {
+        abort_if(! $request->user()->isSuperAdmin(), 403);
+
+        $request->validate([
+            'reply' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $message->update([
+            'read' => true,
+            'reply_text' => $request->reply,
+            'replied_at' => now(),
+        ]);
+
+        return response()->json($message->load('user:id,name,email', 'organization:id,name'));
+    }
 }

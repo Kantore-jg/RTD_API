@@ -17,12 +17,15 @@ class AdminMessage extends Model
         'subject',
         'message',
         'read',
+        'reply_text',
+        'replied_at',
     ];
 
     protected function casts(): array
     {
         return [
             'read' => 'boolean',
+            'replied_at' => 'datetime',
         ];
     }
 

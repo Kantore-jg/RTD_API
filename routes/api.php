@@ -151,6 +151,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/admin-messages', [AdminMessageController::class, 'index']);
         Route::patch('/admin-messages/{message}/read', [AdminMessageController::class, 'markRead']);
+        Route::post('/admin-messages/{message}/reply', [AdminMessageController::class, 'reply']);
 
         Route::get('/newsletters', [NewsletterController::class, 'index']);
         Route::post('/newsletters', [NewsletterController::class, 'store']);

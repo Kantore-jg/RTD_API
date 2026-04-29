@@ -108,11 +108,12 @@ class SuperAdminController extends Controller
             'plan' => ['nullable', 'string', 'max:50'],
             'monthly_fee' => ['nullable', 'numeric'],
             'modules' => ['nullable', 'array'],
+            'status' => ['nullable', 'in:active,trial,suspended'],
         ]);
 
         $organization->update($request->only([
             'name', 'domain', 'address', 'phone', 'email', 'company_email',
-            'nif', 'plan', 'monthly_fee', 'modules',
+            'nif', 'plan', 'monthly_fee', 'modules', 'status',
         ]));
 
         return response()->json($organization);
