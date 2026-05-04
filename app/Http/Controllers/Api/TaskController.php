@@ -26,6 +26,10 @@ class TaskController extends Controller
                 $query->whereHas('assignees', fn ($q) => $q->where('employees.id', $employeeId));
             }
 
+            if ($assigneeId = $request->get('assignee_id')) {
+                $query->whereHas('assignees', fn ($q) => $q->where('employees.id', $assigneeId));
+            }
+
             if ($status = $request->get('status')) {
                 $query->where('status', $status);
             }
